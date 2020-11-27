@@ -48,42 +48,6 @@
 @synthesize fcmRegistrationToken;
 @synthesize fcmTopics;
 
--(void)initRegistration;
-{
-    NSLog(@"FCM token is null");
-}
-
-//  FCM refresh token
-//  Unclear how this is testable under normal circumstances
-- (void)onTokenRefresh {
-#if !TARGET_IPHONE_SIMULATOR
-    [self initRegistration];
-#endif
-}
-
-// contains error info
-- (void)sendDataMessageFailure:(NSNotification *)notification {
-    NSLog(@"sendDataMessageFailure");
-}
-- (void)sendDataMessageSuccess:(NSNotification *)notification {
-    NSLog(@"sendDataMessageSuccess");
-}
-
-- (void)didSendDataMessageWithID:messageID {
-    NSLog(@"didSendDataMessageWithID");
-}
-
-- (void)willSendDataMessageWithID:messageID error:error {
-    NSLog(@"willSendDataMessageWithID");
-}
-
-- (void)didDeleteMessagesOnServer {
-    NSLog(@"didDeleteMessagesOnServer");
-    // Some messages sent to this device were deleted on the GCM server before reception, likely
-    // because the TTL expired. The client should notify the app server of this, so that the app
-    // server can resend those messages.
-}
-
 - (void)unregister:(CDVInvokedUrlCommand*)command;
 {
     [[UIApplication sharedApplication] unregisterForRemoteNotifications];
@@ -219,12 +183,11 @@
                                                          name:pushPluginApplicationDidBecomeActiveNotification
                                                        object:nil];
 
-
-
-
             NSLog(@"Using APNS Notification");
             [self setUsesFCM:NO];
+            NSLog(@"Using FCM Sandbox NO");
             [self setFcmSandbox:@NO];
+
             if (notificationMessage) {            // if there is a pending startup notification
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // delay to allow JS event handlers to be setup
@@ -305,7 +268,7 @@
 - (void)didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
     if (self.callbackId == nil) {
-        NSLog(@"Unself->expected call to didFailToRegisterForRemoteNotificationsWithError, ignoring: %@", error);
+        NSLog(@"Unexpected call to didFailToRegisterForRemoteNotificationsWithError, ignoring: %@", error);
         return;
     }
     NSLog(@"Push Plugin register failed");
@@ -551,6 +514,7 @@
 
 - (void)handleNotificationSettingsWithAuthorizationOptions:(NSNumber *)authorizationOptionsObject
 {
+    NSLog(@"PushPlugin: requestAuthorization");
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     UNAuthorizationOptions authorizationOptions = [authorizationOptionsObject unsignedIntegerValue];
 
@@ -560,6 +524,7 @@
         switch (settings.authorizationStatus) {
             case UNAuthorizationStatusNotDetermined:
             {
+                NSLog(@"PushPlugin.requestAuthorization: UNAuthorizationStatusNotDetermined");
                 [weakCenter requestAuthorizationWithOptions:authorizationOptions completionHandler:^(BOOL granted, NSError * _Nullable error) {
                     if (granted) {
                         [self performSelectorOnMainThread:@selector(registerForRemoteNotifications)
@@ -571,12 +536,16 @@
             }
             case UNAuthorizationStatusAuthorized:
             {
+                NSLog(@"PushPlugin.requestAuthorization: UNAuthorizationStatusAuthorized");
                 [self performSelectorOnMainThread:@selector(registerForRemoteNotifications)
                                        withObject:nil
                                     waitUntilDone:NO];
                 break;
             }
             case UNAuthorizationStatusDenied:
+            {
+                NSLog(@"PushPlugin.requestAuthorization: UNAuthorizationStatusDenied");
+            }
             default:
                 break;
         }
