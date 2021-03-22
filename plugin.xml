@@ -16,7 +16,7 @@
     <engine name="cordova-ios" version=">=4.5.0"/>
   </engines>
   <platform name="android">
-    <dependency id="cordova-plugin-appboy" url="https://github.com/qustodio/appboy-cordova-sdk#d888e3cb5af696464a79c09a05d502b77f3aeaa7" />
+    <dependency id="cordova-plugin-appboy" url="https://github.com/qustodio/appboy-cordova-sdk#a9212b7d9d11c86569402f8db455a6199faa61b3" />
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="PushNotification">
         <param name="android-package" value="com.adobe.phonegap.push.PushPlugin"/>
